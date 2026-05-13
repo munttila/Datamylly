@@ -2,59 +2,44 @@ exports.handler = async function(event) {
 
   const API = "https://trafi2.stat.fi/PXWeb/api/v1/fi/TraFi/TraFi__Kaytettyna_maahantuodut/040_yksmaah_tau_104.px";
 
-  // All Finnish special chars as unicode escapes to avoid encoding issues
-  // K\u00e4ytt\u00f6\u00f6nottovuosi = Käyttöönottovuosi
-  // K\u00e4ytt\u00f6voima = Käyttövoima
-  // Yhteens\u00e4 = Yhteensä
-
+  // Minimal possible query - just one brand, one year, one month, no fuel filter
   const query = {
     query: [
-      {
-        code: "Merkki",
-        selection: { filter: "item", values: ["Volkswagen"] }
-      },
-      {
-        code: "K\u00e4ytt\u00f6\u00f6nottovuosi",
-        selection: { filter: "item", values: ["2024"] }
-      },
-      {
-        code: "K\u00e4ytt\u00f6voima",
-        selection: { filter: "item", values: ["Yhteens\u00e4"] }
-      },
-      {
-        code: "Kuukausi",
-        selection: { filter: "item", values: ["2024M01", "2024M02", "2024M03"] }
-      }
+      { code: "Merkki",   selection: { filter: "item", values: ["Volkswagen"] } },
+      { code: "Kuukausi", selection: { filter: "item", values: ["2024M01"] } }
     ],
     response: { format: "json" }
   };
 
+  const bodyStr = JSON.stringify(query);
+
   try {
     const resp = await fetch(API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(query)
+      headers: { "Content-Type": "application/json" },
+      body: bodyStr
     });
 
     const text = await resp.text();
 
+    // Return everything for debugging
     return {
-      statusCode: resp.status,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Access-Control-Allow-Origin": "*"
-      },
-      body: text
+      statusCode: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({
+        traficom_status: resp.status,
+        traficom_statustext: resp.statusText,
+        query_sent: query,
+        body_sent: bodyStr,
+        traficom_response: text.slice(0, 2000)
+      }, null, 2)
     };
 
   } catch(e) {
     return {
-      statusCode: 500,
-      headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: e.message })
+      statusCode: 200,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ fetch_error: e.message, stack: e.stack })
     };
   }
 };
