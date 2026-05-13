@@ -1,7 +1,8 @@
 [build]
   publish = "."
 
-[[headers]]
-  for = "/*"
-  [headers.values]
-    Cache-Control = "public, max-age=3600"
+[[redirects]]
+  from = "/api/traficom/*"
+  to = "https://trafi2.stat.fi/PXWeb/api/v1/en/TraFi/TraFi__Kaytettyna_maahantuodut/:splat"
+  status = 200
+  force = true
