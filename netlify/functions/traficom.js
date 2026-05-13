@@ -1,45 +1,70 @@
 exports.handler = async function(event) {
 
-  const API = "https://trafi2.stat.fi/PXWeb/api/v1/fi/TraFi/TraFi__Kaytettyna_maahantuodut/040_yksmaah_tau_104.px";
+  const BASE = "https://trafi2.stat.fi/PXWeb/api/v1/fi/TraFi/TraFi__Kaytettyna_maahantuodut/040_yksmaah_tau_104.px";
 
-  // Minimal possible query - just one brand, one year, one month, no fuel filter
-  const query = {
-    query: [
-      { code: "Merkki",   selection: { filter: "item", values: ["Volkswagen"] } },
-      { code: "Kuukausi", selection: { filter: "item", values: ["2024M01"] } }
-    ],
-    response: { format: "json" }
-  };
+  const results = {};
 
-  const bodyStr = JSON.stringify(query);
-
+  // Test 1: GET metadata
   try {
-    const resp = await fetch(API, {
+    const r = await fetch(BASE, { method: "GET" });
+    const txt = await r.text();
+    results.test1_GET_metadata = {
+      status: r.status,
+      body: txt.slice(0, 1000)
+    };
+  } catch(e) { results.test1_GET_metadata = { error: e.message }; }
+
+  // Test 2: POST with ALL 4 variables including required ones
+  try {
+    const r = await fetch(BASE, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: bodyStr
-    });
-
-    const text = await resp.text();
-
-    // Return everything for debugging
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({
-        traficom_status: resp.status,
-        traficom_statustext: resp.statusText,
-        query_sent: query,
-        body_sent: bodyStr,
-        traficom_response: text.slice(0, 2000)
-      }, null, 2)
-    };
+        query: [
+          { code: "Merkki",              selection: { filter: "item", values: ["Volkswagen"] } },
+          { code: "K\u00e4ytt\u00f6\u00f6nottovuosi", selection: { filter: "item", values: ["2024"] } },
+          { code: "K\u00e4ytt\u00f6voima",       selection: { filter: "item", values: ["Yhteens\u00e4"] } },
+          { code: "Kuukausi",            selection: { filter: "item", values: ["2024M01"] } }
+        ],
+        response: { format: "json" }
+      })
+    });
+    const txt = await r.text();
+    results.test2_POST_all4_fi = { status: r.status, body: txt.slice(0, 500) };
+  } catch(e) { results.test2_POST_all4_fi = { error: e.message }; }
 
-  } catch(e) {
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ fetch_error: e.message, stack: e.stack })
-    };
-  }
+  // Test 3: POST with top(1) filter to get any data
+  try {
+    const r = await fetch(BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: [
+          { code: "Merkki",              selection: { filter: "top", values: ["1"] } },
+          { code: "K\u00e4ytt\u00f6\u00f6nottovuosi", selection: { filter: "top", values: ["1"] } },
+          { code: "K\u00e4ytt\u00f6voima",       selection: { filter: "top", values: ["1"] } },
+          { code: "Kuukausi",            selection: { filter: "top", values: ["1"] } }
+        ],
+        response: { format: "json" }
+      })
+    });
+    const txt = await r.text();
+    results.test3_POST_top1 = { status: r.status, body: txt.slice(0, 1000) };
+  } catch(e) { results.test3_POST_top1 = { error: e.message }; }
+
+  // Test 4: English endpoint GET
+  try {
+    const r = await fetch(
+      "https://trafi2.stat.fi/PXWeb/api/v1/en/TraFi/TraFi__Kaytettyna_maahantuodut/040_yksmaah_tau_104.px",
+      { method: "GET" }
+    );
+    const txt = await r.text();
+    results.test4_EN_GET = { status: r.status, body: txt.slice(0, 1000) };
+  } catch(e) { results.test4_EN_GET = { error: e.message }; }
+
+  return {
+    statusCode: 200,
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    body: JSON.stringify(results, null, 2)
+  };
 };
