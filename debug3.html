@@ -3,113 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Datamylly Debug 4</title>
+<title>Debug 5</title>
 <style>
 body{background:#07101e;color:#e4eaf4;font-family:monospace;padding:16px;font-size:12px}
-button{background:#00d4a8;color:#000;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;margin:4px;display:block;width:100%;margin-bottom:8px}
+button{background:#00d4a8;color:#000;border:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;margin-bottom:8px;display:block;width:100%}
 pre{background:#0d1828;border:1px solid #1a2a3d;border-radius:8px;padding:12px;margin-top:10px;white-space:pre-wrap;word-break:break-all;font-size:10px;max-height:600px;overflow-y:auto}
 .ok{color:#00d4a8}.err{color:#f87171}.warn{color:#fbbf24}.dim{color:#4e6278}
 </style>
 </head>
 <body>
-<h2>&#9881; Debug 4</h2>
+<h2>&#9881; Debug 5 — Function testi</h2>
 
-<button onclick="testMeta()">1. Hae metadata (POST tyhjalla kyselylla)</button>
-<button onclick="testVW()">2. Testaa VW + 2024 + Total + 2024M01</button>
-<button onclick="testVWfi()">3. Testaa FI-kielisilla koodeilla</button>
+<button onclick="t1()">1. Testaa Function (VW tammikuu 2024)</button>
 <button onclick="clearLog()">Tyhjenna</button>
 
 <pre id="out">Paina nappia...</pre>
 
 <script>
-const PROXY = "/api/traficom/040_yksmaah_tau_104.px";
-
-function log(msg, cls=""){
-  const el = document.getElementById("out");
-  const safe = String(msg).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  el.innerHTML += `<span class="${cls}">${safe}</span>\n`;
+function log(msg,cls=""){
+  const el=document.getElementById("out");
+  const s=String(msg).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  el.innerHTML+=`<span class="${cls}">${s}</span>\n`;
 }
-function clearLog(){ document.getElementById("out").innerHTML=""; }
+function clearLog(){document.getElementById("out").innerHTML="";}
 
-async function post(body){
-  const r = await fetch(PROXY, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify(body)
-  });
-  const txt = await r.text();
-  return {status: r.status, ok: r.ok, txt};
-}
-
-// PxWeb metadata: POST with empty query returns variable list
-async function testMeta(){
+async function t1(){
   clearLog();
-  log("POST metadata (tom kysely)...", "warn");
+  log("POST /.netlify/functions/traficom","warn");
   try{
-    const {status, ok, txt} = await post({
-      query: [],
-      response: {format: "json"}
-    });
-    log("Status: " + status, ok?"ok":"err");
-    if(ok){
-      const d = JSON.parse(txt);
-      log("\n=== MUUTTUJAT ===", "warn");
-      d.variables.forEach(v => {
-        log(`\ncode: "${v.code}"`, "ok");
-        log(`text: "${v.text}"`);
-        log(`values (kaikki):`, "warn");
-        v.values.forEach((val,i) => {
-          log(`  "${val}"  =>  "${v.valueTexts[i]}"`, "dim");
-        });
-      });
-    } else {
-      log(txt.slice(0, 300), "err");
+    const r=await fetch("/.netlify/functions/traficom",{method:"POST"});
+    log("Status: "+r.status,r.ok?"ok":"err");
+    const txt=await r.text();
+    log(txt.slice(0,800));
+    if(r.ok){
+      try{
+        const d=JSON.parse(txt);
+        log("\nArvo[0]: "+d.value[0],"ok");
+        log("Arvoja yhteensa: "+d.value.length,"ok");
+      }catch(e){log("JSON parse error: "+e.message,"err");}
     }
   }catch(e){
-    log("ERROR: "+e.message, "err");
-  }
-}
-
-// Test EN codes
-async function testVW(){
-  clearLog();
-  log("Testaa EN koodit...", "warn");
-  try{
-    const {status, ok, txt} = await post({
-      query:[
-        {code:"Make",                        selection:{filter:"item", values:["Volkswagen"]}},
-        {code:"Year of first registration",  selection:{filter:"item", values:["2024"]}},
-        {code:"Driving power",               selection:{filter:"item", values:["Total"]}},
-        {code:"Month",                       selection:{filter:"item", values:["2024M01"]}}
-      ],
-      response:{format:"json"}
-    });
-    log("Status: " + status, ok?"ok":"err");
-    log(txt.slice(0, 400));
-  }catch(e){
-    log("ERROR: "+e.message,"err");
-  }
-}
-
-// Test FI codes via EN proxy (proxy points to EN endpoint)
-async function testVWfi(){
-  clearLog();
-  log("Testaa FI koodit EN proxyn kautta...", "warn");
-  try{
-    // Try with raw numeric codes which work in both languages
-    const {status, ok, txt} = await post({
-      query:[
-        {code:"Merkki",            selection:{filter:"item", values:["Volkswagen"]}},
-        {code:"Kayttoonotovuosi",  selection:{filter:"item", values:["2024"]}},
-        {code:"Kayttovoima",       selection:{filter:"item", values:["Yhteensa"]}},
-        {code:"Kuukausi",          selection:{filter:"item", values:["2024M01"]}}
-      ],
-      response:{format:"json"}
-    });
-    log("Status: " + status, ok?"ok":"err");
-    log(txt.slice(0, 400));
-  }catch(e){
-    log("ERROR: "+e.message,"err");
+    log("FETCH ERROR: "+e.message,"err");
   }
 }
 </script>
