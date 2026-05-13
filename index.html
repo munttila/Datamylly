@@ -16,7 +16,6 @@ html,body{background:var(--bg);color:var(--t);font-family:-apple-system,'SF Pro 
 body{padding:env(safe-area-inset-top,0) 0 calc(env(safe-area-inset-bottom,0)+24px)}
 .hdr{padding:16px 18px 12px;background:linear-gradient(180deg,#0a1520,var(--bg));border-bottom:1px solid var(--b);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .hdr-row{display:flex;align-items:center;gap:10px}
-.logo{font-size:22px}
 h1{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .hsub{font-size:10px;color:var(--m);font-family:var(--mono);margin-top:3px}
 .badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;background:rgba(0,212,168,.1);border:1px solid rgba(0,212,168,.25);color:var(--a);font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:20px}
@@ -43,19 +42,19 @@ h1{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .li{display:flex;align-items:center;gap:5px;font-size:10px}
 .ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
 .ll{width:20px;height:0;flex-shrink:0}
-.sec{display:none}
-.sec.on{display:block}
+.sec{display:none}.sec.on{display:block}
 .note{font-size:9.5px;color:var(--m);font-family:var(--mono);line-height:1.65;margin-top:10px;padding:8px 10px;background:#0a1520;border-radius:8px;border-left:2px solid var(--b);white-space:pre-wrap}
 .sbar{padding:8px 14px;font-size:10px;color:var(--m);font-family:var(--mono)}
 .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--b);border-top-color:var(--a);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
 @keyframes spin{to{transform:rotate(360deg)}}
+.err-box{margin:20px 14px;background:#1a0a0a;border:1px solid #5a1a1a;border-radius:12px;padding:16px;font-family:var(--mono);font-size:11px;color:#f87171;line-height:1.8}
 footer{text-align:center;padding:20px 14px 8px;font-size:9px;color:#1e3050;font-family:var(--mono);line-height:1.9}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div class="hdr-row">
-    <div class="logo">&#9881;&#65039;</div>
+    <div style="font-size:22px">&#9881;&#65039;</div>
     <div><h1>Datamylly</h1><div class="hsub">Kaytettyna tuodut alle 3v henkiloautot &middot; 30 kk</div></div>
   </div>
   <div class="badge"><span class="dot"></span><span id="fresh">Ladataan...</span></div>
@@ -72,198 +71,33 @@ footer{text-align:center;padding:20px 14px 8px;font-size:9px;color:#1e3050;font-
   <button class="tab" onclick="st('trendi',this)">Trendi</button>
   <button class="tab" onclick="st('info',this)">Tietoja</button>
 </div>
-<div class="sbar"><span id="smsg"><span class="spin"></span>Haetaan Traficomilta...</span></div>
-
+<div class="sbar"><span id="smsg"><span class="spin"></span>Ladataan dataa...</span></div>
 <div id="sec-merkit" class="sec on">
-  <div class="card">
-    <div class="ct">Merkeittain &middot; alle 3v kpl/kk &middot; pyyhkaise &rarr;</div>
-    <div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="cm"></canvas></div></div></div>
-    <div class="hint">&larr; pyyhkaise &rarr;</div>
-    <div class="leg" id="lm"></div>
-  </div>
-  <div class="card">
-    <div class="ct">Top-merkit &middot; kumulatiivinen 30 kk</div>
-    <div class="cfixed"><canvas id="cb"></canvas></div>
-  </div>
+  <div class="card"><div class="ct">Merkeittain &middot; alle 3v kpl/kk &middot; pyyhkaise</div><div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="cm"></canvas></div></div></div><div class="hint">&larr; pyyhkaise &rarr;</div><div class="leg" id="lm"></div></div>
+  <div class="card"><div class="ct">Top-merkit &middot; kumulatiivinen 30 kk</div><div class="cfixed"><canvas id="cb"></canvas></div></div>
 </div>
-
 <div id="sec-kayttov" class="sec">
-  <div class="card">
-    <div class="ct">Kayttovoimaosuudet % &middot; pyyhkaise &rarr;</div>
-    <div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="cp"></canvas></div></div></div>
-    <div class="hint">&larr; pyyhkaise &rarr;</div>
-    <div class="leg" id="lp"></div>
-  </div>
-  <div class="card">
-    <div class="ct">Kayttovoima kpl/kk &middot; pyyhkaise &rarr;</div>
-    <div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="ck"></canvas></div></div></div>
-    <div class="hint">&larr; pyyhkaise &rarr;</div>
-  </div>
+  <div class="card"><div class="ct">Kayttovoimaosuudet %</div><div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="cp"></canvas></div></div></div><div class="hint">&larr; pyyhkaise &rarr;</div><div class="leg" id="lp"></div></div>
+  <div class="card"><div class="ct">Kayttovoima kpl/kk</div><div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="ck"></canvas></div></div></div><div class="hint">&larr; pyyhkaise &rarr;</div></div>
 </div>
-
 <div id="sec-trendi" class="sec">
-  <div class="card">
-    <div class="ct">Kokonaisvolyymi alle 3v &middot; kpl/kk &middot; pyyhkaise &rarr;</div>
-    <div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="ct2"></canvas></div></div></div>
-    <div class="hint">&larr; pyyhkaise &rarr;</div>
-    <div class="note" id="nd"></div>
-  </div>
+  <div class="card"><div class="ct">Kokonaisvolyymi alle 3v &middot; kpl/kk</div><div class="cscroll"><div class="cinner"><div class="cwrap"><canvas id="ct2"></canvas></div></div></div><div class="hint">&larr; pyyhkaise &rarr;</div><div class="note" id="nd"></div></div>
 </div>
-
 <div id="sec-info" class="sec">
-  <div class="card">
-    <div class="ct">Datamylly v1.0</div>
-    <div class="note" style="margin-top:0;border-left-color:var(--a)">Hakee Traficomin PxWeb-rajapinnasta alle 3-vuotiaiden kaytettyjen henkiloautojen tuontitilastot. Data paivittyy automaattisesti kuukausittain GitHub Actions -ajastimella.</div>
-  </div>
-  <div class="card">
-    <div class="ct">Alle-3v-logiikka</div>
-    <div class="note" style="margin-top:0">Kaava: hyvaksytty_vm >= tuontivuosi - 2
-
-Jan 2024: vm 2022, 2023, 2024
-Sep 2025: vm 2023, 2024, 2025
-Apr 2026: vm 2024, 2025, 2026</div>
-  </div>
-  <div class="card">
-    <div class="ct">Lahde</div>
-    <div class="note" style="margin-top:0">Traficom / Liikenne- ja viestintavirasto
-trafi2.stat.fi / Taulukko 040 (EN)
-Lisenssi: CC BY 4.0</div>
-  </div>
+  <div class="card"><div class="ct">Datamylly v1.0</div><div class="note" style="margin-top:0;border-left-color:var(--a)">Data haetaan Traficomin PxWeb-rajapinnasta GitHub Actions -ajastimella kerran kuussa ja tallennetaan staattisena JSON-tiedostona. Dashboard lukee sen suoraan.</div></div>
+  <div class="card"><div class="ct">Lahde</div><div class="note" style="margin-top:0">Traficom / Liikenne- ja viestintavirasto&#10;trafi2.stat.fi / Taulukko 040&#10;Lisenssi: CC BY 4.0</div></div>
 </div>
-
 <footer>Datamylly &middot; Traficom &middot; CC BY 4.0<br><span id="fr"></span></footer>
 
 <script>
-// ── ENGLISH API - no scandinavian chars in variable codes ──────────────────
-const API = "/api/traficom/040_yksmaah_tau_104.px";
-
-// English variable codes (ASCII-safe)
-const V_MAKE  = "Make";
-const V_YEAR  = "Year of first registration";
-const V_FUEL  = "Driving power";
-const V_MONTH = "Month";
-
-// English value codes
-const V_ALL_MAKES = "Passenger cars total";
-const V_ALL_FUEL  = "Total";
-
-// Brand names as they appear in the English API
-const BRANDS = [
-  "Volkswagen","Volvo","Mercedes-Benz","BMW","Polestar","Tesla Motors",
-  "Audi","Toyota","Skoda","Ford","Hyundai","Kia","Renault","Nissan",
-  "Mazda","Opel","Cupra","Dacia","Mitsubishi","Land Rover"
+const PT=[
+  {label:"Sahko",     color:"#00d4a8",dash:[]},
+  {label:"PHEV bens.",color:"#38bdf8",dash:[6,3]},
+  {label:"PHEV dies.",color:"#818cf8",dash:[4,3]},
+  {label:"Bensiini",  color:"#fb923c",dash:[2,4]},
+  {label:"Diesel",    color:"#fbbf24",dash:[2,4]},
 ];
-
-// Fuel types - English codes
-const PT = [
-  {code:"Electric",                    label:"Sahko",      color:"#00d4a8", dash:[]},
-  {code:"Petrol/Electric (plug-in)",   label:"PHEV bens.", color:"#38bdf8", dash:[6,3]},
-  {code:"Diesel/Electric (plug-in)",   label:"PHEV dies.", color:"#818cf8", dash:[4,3]},
-  {code:"Petrol",                      label:"Bensiini",   color:"#fb923c", dash:[2,4]},
-  {code:"Diesel",                      label:"Diesel",     color:"#fbbf24", dash:[2,4]},
-];
-
 const BC=["#e879f9","#facc15","#4ade80","#60a5fa","#f87171","#fb923c","#a78bfa","#34d399","#f472b6","#94a3b8","#c084fc","#86efac","#fda4af","#67e8f9","#d9f99d","#fcd34d","#a5f3fc","#bbf7d0","#fecaca","#c7d2fe"];
-
-const LATEST_YEAR=2026, LATEST_MONTH=4, N=30;
-
-function buildMonths(){
-  const m=[];let y=LATEST_YEAR,mo=LATEST_MONTH;
-  for(let i=0;i<N;i++){
-    m.unshift({year:y,month:mo,code:`${y}M${String(mo).padStart(2,"0")}`});
-    if(--mo===0){mo=12;y--;}
-  }
-  return m;
-}
-function youngYears(mon){
-  const r=[];
-  for(let y=mon.year-2;y<=LATEST_YEAR;y++) r.push(String(y));
-  return r;
-}
-function allYears(months){
-  const s=new Set();
-  months.forEach(m=>youngYears(m).forEach(y=>s.add(y)));
-  return [...s].sort();
-}
-
-async function px(q){
-  const r=await fetch(API,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({query:q,response:{format:"json"}})
-  });
-  if(!r.ok){
-    const txt=await r.text();
-    throw new Error(`Traficom ${r.status} - ${txt.slice(0,120)}`);
-  }
-  return r.json();
-}
-
-async function load(){
-  ss("Haetaan dataa Traficomilta...");
-  try{
-    const months=buildMonths(), yrs=allYears(months);
-    const mcodes=months.map(m=>m.code);
-
-    const [bd,pd]=await Promise.all([
-      px([
-        {code:V_MAKE,  selection:{filter:"item",values:BRANDS}},
-        {code:V_YEAR,  selection:{filter:"item",values:yrs}},
-        {code:V_FUEL,  selection:{filter:"item",values:[V_ALL_FUEL]}},
-        {code:V_MONTH, selection:{filter:"item",values:mcodes}}
-      ]),
-      px([
-        {code:V_MAKE,  selection:{filter:"item",values:[V_ALL_MAKES]}},
-        {code:V_YEAR,  selection:{filter:"item",values:yrs}},
-        {code:V_FUEL,  selection:{filter:"item",values:PT.map(p=>p.code)}},
-        {code:V_MONTH, selection:{filter:"item",values:mcodes}}
-      ])
-    ]);
-
-    ss("Lasketaan...");
-    const nB=BRANDS.length,nY=yrs.length,nM=months.length,nP=PT.length;
-    const bv=bd.value,pv=pd.value;
-    const yi=Object.fromEntries(yrs.map((y,i)=>[y,i]));
-
-    const mB=[],mP=[],bT=new Array(nB).fill(0);
-    months.forEach((mon,mi)=>{
-      const vy=youngYears(mon).filter(y=>y in yi);
-      const rb=BRANDS.map((_,bi)=>vy.reduce((s,y)=>s+(bv[bi*nY*nM+yi[y]*nM+mi]||0),0));
-      rb.forEach((v,bi)=>bT[bi]+=v);
-      mB.push(rb);
-      mP.push(PT.map((_,pi)=>vy.reduce((s,y)=>s+(pv[pi*nY*nM+yi[y]*nM+mi]||0),0)));
-    });
-
-    const labs=months.map(m=>`${m.month}/${String(m.year).slice(2)}`);
-    const tots=months.map((_,mi)=>mP[mi].reduce((a,b)=>a+b,0));
-
-    kpis(tots,mP,nM);
-    drawM(labs,mB,bT);
-    drawP(labs,mP,tots);
-    drawT(labs,tots);
-    note(months,yrs);
-
-    const f=months[0].code.replace("M","/"),l=months[nM-1].code.replace("M","/");
-    document.getElementById("fresh").textContent=`Traficom ${f}-${l}`;
-    document.getElementById("fr").textContent=`${f} - ${l}`;
-    ss("Valmis","ok");
-  }catch(e){
-    console.error(e);
-    ss("Virhe: "+e.message,"err");
-    document.getElementById("fresh").textContent="Virhe";
-  }
-}
-
-function kpis(tots,mP,nM){
-  document.getElementById("k0").textContent=tots.reduce((a,b)=>a+b,0).toLocaleString("fi");
-  let ev=0,ph=0,tot=0;
-  for(let i=nM-6;i<nM;i++){tot+=tots[i];ev+=mP[i][0];ph+=mP[i][1]+mP[i][2];}
-  const p=v=>tot>0?Math.round(v/tot*100)+"%":"--";
-  document.getElementById("k1").textContent=p(ev);
-  document.getElementById("k2").textContent=p(ph);
-  document.getElementById("k3").textContent=p(ev+ph);
-}
-
 const GR="#1a2a3d",TK="#4e6278";
 const TT={backgroundColor:"#0a1825f5",borderColor:GR,borderWidth:1,titleColor:"#e4eaf4",bodyColor:"#8a9eb8",padding:10,cornerRadius:8};
 Chart.defaults.color=TK;Chart.defaults.borderColor=GR;
@@ -272,16 +106,57 @@ Chart.defaults.font.size=9;
 const xSc=()=>({grid:{color:GR},ticks:{color:TK,font:{size:8},maxRotation:60}});
 const ySc=st=>({type:"linear",position:"left",stacked:!!st,grid:{color:GR},ticks:{color:TK,font:{size:8}}});
 
-function drawM(labs,mB,bT){
-  const ranked=[...Array(BRANDS.length).keys()].map(i=>({i,t:bT[i]})).sort((a,b)=>b.t-a.t).slice(0,10);
+async function load(){
+  ss("Ladataan dataa...");
+  try{
+    const r = await fetch("/data/latest.json");
+    if(!r.ok) throw new Error("data/latest.json ei loydy ("+r.status+"). Aja fetch_data.py ensin.");
+    const d = await r.json();
+    render(d);
+    const upd = d.updated ? d.updated.slice(0,10) : "?";
+    document.getElementById("fresh").textContent="Paivitetty "+upd;
+    document.getElementById("fr").textContent=d.months[0].replace("M","/")+"-"+d.months[d.months.length-1].replace("M","/");
+    ss("Valmis","ok");
+  }catch(e){
+    ss(e.message,"err");
+    document.getElementById("fresh").textContent="Ei dataa";
+    document.body.insertAdjacentHTML("beforeend",
+      `<div class="err-box">
+        <b>Data puuttuu</b><br><br>
+        Repossa ei ole vielä data/latest.json tiedostoa.<br><br>
+        Tee nain:<br>
+        1. Mene GitHubiin → Actions-valilehti<br>
+        2. Valitse "Paivita Traficom-data"<br>
+        3. Paina "Run workflow" → "Run workflow"<br>
+        4. Odota ~30 sek → paivita sivu
+      </div>`
+    );
+  }
+}
+
+function render(d){
+  const labs=d.months.map(m=>{const p=m.split("M");return p[1]+"/"+p[0].slice(2);});
+  const nM=d.months.length,nB=d.brands.length;
+  const tots=d.monthly_pt.map(r=>r.reduce((a,b)=>a+b,0));
+
+  // KPIs
+  document.getElementById("k0").textContent=d.brand_totals.reduce((a,b)=>a+b,0).toLocaleString("fi");
+  let ev=0,ph=0,tot=0;
+  for(let i=nM-6;i<nM;i++){tot+=tots[i];ev+=d.monthly_pt[i][0];ph+=d.monthly_pt[i][1]+d.monthly_pt[i][2];}
+  const p=v=>tot>0?Math.round(v/tot*100)+"%":"--";
+  document.getElementById("k1").textContent=p(ev);
+  document.getElementById("k2").textContent=p(ph);
+  document.getElementById("k3").textContent=p(ev+ph);
+
+  // Merkit
+  const ranked=[...Array(nB).keys()].map(i=>({i,t:d.brand_totals[i]})).sort((a,b)=>b.t-a.t).slice(0,10);
   new Chart(document.getElementById("cm"),{
     data:{labels:labs,datasets:ranked.map((r,ri)=>({
-      type:"bar",label:BRANDS[r.i],
-      data:labs.map((_,mi)=>mB[mi][r.i]),
+      type:"bar",label:d.brands[r.i],
+      data:d.monthly_brands.map(row=>row[r.i]),
       backgroundColor:BC[ri]+"bb",borderColor:BC[ri],borderWidth:.5,stack:"b"
     }))},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
       plugins:{legend:{display:false},tooltip:{...TT,callbacks:{
         label:c=>` ${c.dataset.label}: ${c.parsed.y} kpl`,
         footer:items=>` Yht: ${items.reduce((a,i)=>a+i.parsed.y,0)} kpl`
@@ -290,61 +165,55 @@ function drawM(labs,mB,bT){
   });
   const leg=document.getElementById("lm");
   ranked.forEach((r,ri)=>{
-    const d=document.createElement("div");d.className="li";
-    d.innerHTML=`<div class="ld" style="background:${BC[ri]}"></div>${BRANDS[r.i]}`;
-    leg.appendChild(d);
+    const el=document.createElement("div");el.className="li";
+    el.innerHTML=`<div class="ld" style="background:${BC[ri]}"></div>${d.brands[r.i]}`;
+    leg.appendChild(el);
   });
-  const rs=[...ranked].sort((a,b)=>b.t-a.t);
   new Chart(document.getElementById("cb"),{
     type:"bar",
-    data:{labels:rs.map(r=>BRANDS[r.i]),datasets:[{
-      data:rs.map(r=>r.t),
-      backgroundColor:rs.map((_,i)=>BC[i]+"bb"),
-      borderColor:rs.map((_,i)=>BC[i]),
+    data:{labels:ranked.map(r=>d.brands[r.i]),datasets:[{
+      data:ranked.map(r=>r.t),
+      backgroundColor:ranked.map((_,i)=>BC[i]+"bb"),
+      borderColor:ranked.map((_,i)=>BC[i]),
       borderWidth:1,borderRadius:4
     }]},
     options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
       plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.parsed.x.toLocaleString("fi")} kpl`}}},
       scales:{x:{grid:{color:GR},ticks:{color:TK,font:{size:8}}},y:{grid:{color:"transparent"},ticks:{color:TK,font:{size:9}}}}}
   });
-}
 
-function drawP(labs,mP,tots){
+  // Kayttovoima
   new Chart(document.getElementById("cp"),{
     type:"line",
     data:{labels:labs,datasets:PT.map((p,pi)=>({
       label:p.label,
-      data:labs.map((_,mi)=>tots[mi]>0?parseFloat((mP[mi][pi]/tots[mi]*100).toFixed(1)):null),
+      data:labs.map((_,mi)=>tots[mi]>0?parseFloat((d.monthly_pt[mi][pi]/tots[mi]*100).toFixed(1)):null),
       borderColor:p.color,backgroundColor:p.color+"18",borderWidth:2.5,
       borderDash:p.dash,pointRadius:2,tension:.35,fill:false
     }))},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
       plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y?.toFixed(1)}%`}}},
       scales:{x:xSc(),y:{...ySc(),min:0,max:100,ticks:{...ySc().ticks,callback:v=>v+"%"}}}}
   });
-  const leg=document.getElementById("lp");
+  const lp=document.getElementById("lp");
   PT.forEach(p=>{
-    const d=document.createElement("div");d.className="li";
+    const el=document.createElement("div");el.className="li";
     const s=p.dash.length?`border-top:2px dashed ${p.color}`:`border-top:2.5px solid ${p.color}`;
-    d.innerHTML=`<div class="ll" style="${s}"></div>${p.label}`;
-    leg.appendChild(d);
+    el.innerHTML=`<div class="ll" style="${s}"></div>${p.label}`;
+    lp.appendChild(el);
   });
   new Chart(document.getElementById("ck"),{
     type:"bar",
     data:{labels:labs,datasets:PT.map((p,pi)=>({
-      label:p.label,
-      data:labs.map((_,mi)=>mP[mi][pi]),
+      label:p.label,data:d.monthly_pt.map(r=>r[pi]),
       backgroundColor:p.color+"88",stack:"pt",borderWidth:0
     }))},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
       plugins:{legend:{display:false},tooltip:{...TT}},
       scales:{x:{...xSc(),stacked:true},y:ySc(true)}}
   });
-}
 
-function drawT(labs,tots){
+  // Trendi
   new Chart(document.getElementById("ct2"),{
     type:"line",
     data:{labels:labs,datasets:[{
@@ -352,17 +221,11 @@ function drawT(labs,tots){
       borderColor:"#00d4a8",backgroundColor:"rgba(0,212,168,.07)",
       borderWidth:2.5,pointRadius:3,pointBackgroundColor:"#00d4a8",tension:.35,fill:true
     }]},
-    options:{responsive:true,maintainAspectRatio:false,
-      interaction:{mode:"index",intersect:false},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},
       plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.parsed.y} kpl`}}},
       scales:{x:xSc(),y:{...ySc(),min:0}}}
   });
-}
-
-function note(months,yrs){
-  const f=months[0],l=months[months.length-1];
-  document.getElementById("nd").textContent=
-    `Alle-3v per kk:\n${f.code.replace("M","/")} -> vm ${f.year-2}-${f.year}\n${l.code.replace("M","/")} -> vm ${l.year-2}-${l.year}\nKayttoonottovodet kyselyssa: ${yrs.join(", ")}`;
+  document.getElementById("nd").textContent=`Paivitetty: ${d.updated?d.updated.slice(0,10):"?"}\nKuukaudet: ${d.months[0]} - ${d.months[d.months.length-1]}`;
 }
 
 function st(id,btn){
@@ -371,13 +234,11 @@ function st(id,btn){
   document.getElementById("sec-"+id).classList.add("on");
   btn.classList.add("on");
 }
-
 function ss(msg,cls=""){
   const el=document.getElementById("smsg");
   el.innerHTML=(!cls&&!msg.startsWith("V"))?`<span class="spin"></span>${msg}`:msg;
   el.style.color=cls==="ok"?"#00d4a8":cls==="err"?"#f87171":"#4e6278";
 }
-
 window.addEventListener("load",load);
 </script>
 </body>
