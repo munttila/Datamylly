@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Datamylly">
+<meta name="theme-color" content="#07101e">
+<title>Datamylly · Käytettyjen tuonti</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:#07101e; --surface:#0d1828; --border:#1a2a3d;
+    --text:#e4eaf4; --muted:#4e6278; --accent:#00d4a8;
+    --mono:'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--text);font-family:-apple-system,'SF Pro Text','Helvetica Neue',sans-serif;min-height:100vh;overscroll-behavior:none}
+  body{padding:env(safe-area-inset-top,0) 0 calc(env(safe-area-inset-bottom,0)+24px)}
+
+  .header{padding:16px 18px 12px;background:linear-gradient(180deg,#0a1520 0%,var(--bg) 100%);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+  .header-row{display:flex;align-items:center;gap:10px}
+  .logo{font-size:22px;line-height:1}
+  .header-text h1{font-size:17px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+  .header-sub{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+  .data-tag{display:inline-flex;align-items:center;gap:5px;margin-top:6px;background:rgba(0,212,168,.1);border:1px solid rgba(0,212,168,.25);color:var(--accent);font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:20px}
+  .dot-live{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px 0}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 8px;text-align:center}
+  .kpi-label{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;font-family:var(--mono)}
+  .kpi-value{font-size:20px;font-weight:800;letter-spacing:-.03em;line-height:1}
+  .kpi-sub{font-size:8.5px;color:var(--muted);margin-top:3px}
+
+  .tab-bar{display:flex;gap:6px;padding:12px 14px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .tab-bar::-webkit-scrollbar{display:none}
+  .tab{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:600;font-family:var(--mono);cursor:pointer;transition:all .15s;-webkit-appearance:none}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#000}
+
+  .card{margin:12px 14px 0;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:14px 14px 16px;overflow:hidden}
+  .card-title{font-size:9px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+
+  .chart-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .chart-scroll::-webkit-scrollbar{display:none}
+  .chart-inner{min-width:920px}
+  .chart-wrap{position:relative;height:260px}
+  .chart-fixed{position:relative;height:200px}
+  .scroll-hint{font-size:9px;color:var(--muted);font-family:var(--mono);text-align:right;margin-top:5px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:5px 12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .l-item{display:flex;align-items:center;gap:5px;font-size:10px}
+  .l-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+  .l-line{width:20px;height:0;flex-shrink:0}
+
+  .section{display:none}
+  .section.active{display:block}
+
+  .note{font-size:9.5px;color:var(--muted);font-family:var(--mono);line-height:1.65;margin-top:10px;padding:8px 10px;background:#0a1520;border-radius:8px;border-left:2px solid var(--border)}
+
+  .status-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;font-size:9px;color:var(--muted);font-family:var(--mono)}
+  .spin{display:inline-block;width:10px;height:10px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  footer{text-align:center;padding:20px 14px 8px;font-size:9px;color:#1e3050;font-family:var(--mono);line-height:1.9}
+  footer a{color:#2a4060;text-decoration:none}
+  @media(max-width:400px){.kpi-value{font-size:17px}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-row">
+    <div class="logo">⚙️</div>
+    <div class="header-text">
+      <h1>Datamylly</h1>
+      <div class="header-sub">Käytettyjen henkilöautojen tuonti · alle 3v · 30 kk</div>
+    </div>
+  </div>
+  <div class="data-tag"><span class="dot-live"></span><span id="data-freshness">Ladataan...</span></div>
+</div>
+
+<div class="kpi-strip">
+  <div class="kpi">
+    <div class="kpi-label">30 kk yht.</div>
+    <div class="kpi-value" id="kpi-total" style="color:var(--accent)">—</div>
+    <div class="kpi-sub">alle 3v kpl</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Sähkö</div>
+    <div class="kpi-value" id="kpi-ev" style="color:#00d4a8">—</div>
+    <div class="kpi-sub">viim. 6 kk</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">PHEV</div>
+    <div class="kpi-value" id="kpi-phev" style="color:#38bdf8">—</div>
+    <div class="kpi-sub">viim. 6 kk</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Ladatt.</div>
+    <div class="kpi-value" id="kpi-plug" style="color:#fb923c">—</div>
+    <div class="kpi-sub">viim. 6 kk</div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('merkit',this)">Merkit</button>
+  <button class="tab" onclick="showTab('kayttov',this)">Käyttövoima</button>
+  <button class="tab" onclick="showTab('trendi',this)">Trendi</button>
+  <button class="tab" onclick="showTab('tietoja',this)">Tietoja</button>
+</div>
+
+<div id="status-wrap"><div class="status-bar"><span id="status-msg"><span class="spin"></span>Haetaan dataa Traficomilta...</span></div></div>
+
+<!-- TAB: MERKIT -->
+<div id="tab-merkit" class="section active">
+  <div class="card">
+    <div class="card-title">Merkeittäin · alle 3v kpl/kk · pyyhkäise →</div>
+    <div class="chart-scroll"><div class="chart-inner"><div class="chart-wrap"><canvas id="c-merkit"></canvas></div></div></div>
+    <div class="scroll-hint">← pyyhkäise →</div>
+    <div class="legend" id="leg-merkit"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Top-merkit · kumulatiivinen 30 kk</div>
+    <div class="chart-fixed"><canvas id="c-brands-bar"></canvas></div>
+  </div>
+</div>
+
+<!-- TAB: KÄYTTÖVOIMA -->
+<div id="tab-kayttov" class="section">
+  <div class="card">
+    <div class="card-title">Käyttövoimaosuudet % · pyyhkäise →</div>
+    <div class="chart-scroll"><div class="chart-inner"><div class="chart-wrap"><canvas id="c-pt-pct"></canvas></div></div></div>
+    <div class="scroll-hint">← pyyhkäise →</div>
+    <div class="legend" id="leg-pt"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Käyttövoima kpl/kk · pyyhkäise →</div>
+    <div class="chart-scroll"><div class="chart-inner"><div class="chart-wrap"><canvas id="c-pt-kpl"></canvas></div></div></div>
+    <div class="scroll-hint">← pyyhkäise →</div>
+  </div>
+</div>
+
+<!-- TAB: TRENDI -->
+<div id="tab-trendi" class="section">
+  <div class="card">
+    <div class="card-title">Kokonaisvolyymi alle 3v · kpl/kk · pyyhkäise →</div>
+    <div class="chart-scroll"><div class="chart-inner"><div class="chart-wrap"><canvas id="c-total"></canvas></div></div></div>
+    <div class="scroll-hint">← pyyhkäise →</div>
+    <div class="note" id="note-dynamic"></div>
+  </div>
+</div>
+
+<!-- TAB: TIETOJA -->
+<div id="tab-tietoja" class="section">
+  <div class="card">
+    <div class="card-title">Datamylly · versio 1.0</div>
+    <div class="note" style="margin-top:0;border-left-color:var(--accent)">
+      Datamylly hakee käytettyjen alle 3-vuotiaiden henkilöautojen tuontitilastot
+      suoraan Traficomin julkisesta PxWeb-rajapinnasta.
+
+      Data päivittyy automaattisesti kerran kuukaudessa GitHub Actions -ajastimella.
+      Alla kuvattu alle-3v-logiikka toimii dynaamisesti per kuukausi.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Alle-3v-logiikka per kuukausi</div>
+    <div class="note" style="margin-top:0">
+      Kaava: hyväksytty_vm ≥ tuontivuosi − 2
+
+      Esim:
+      · Tammikuu 2024 → vm 2022, 2023, 2024
+      · Syyskuu 2025 → vm 2023, 2024, 2025
+      · Huhtikuu 2026 → vm 2024, 2025, 2026
+
+      Logiikka varmistaa että "alle 3 vuotta" on aina suhteessa
+      kyseiseen tuontikuukauteen, ei kiinteään vuoteen.
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Lähde</div>
+    <div class="note" style="margin-top:0">
+      Traficom · Liikenne- ja viestintävirasto
+      trafi2.stat.fi · Taulukko 040
+      Lisenssi: CC BY 4.0
+      Päivitetään kuukausittain.
+    </div>
+  </div>
+</div>
+
+<footer>
+  ⚙️ Datamylly · <a href="https://tieto.traficom.fi">Traficom</a> · CC BY 4.0<br>
+  <span id="footer-range"></span>
+</footer>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const API  = "https://trafi2.stat.fi/PXWeb/api/v1/fi/TraFi/TraFi__Kaytettyna_maahantuodut/040_yksmaah_tau_104.px";
+const LATEST_YEAR = 2026, LATEST_MONTH = 4, N = 30;
+
+const BRANDS = [
+  "Volkswagen","Volvo","Mercedes-Benz","BMW","Polestar","Tesla Motors",
+  "Audi","Toyota","Skoda","Ford","Hyundai","Kia","Renault","Nissan",
+  "Mazda","Opel","Cupra","Dacia","Mitsubishi","Land Rover"
+];
+const PT = [
+  {code:"Sähkö",                              label:"Täyssähkö",   color:"#00d4a8", dash:[]},
+  {code:"Bensiini/Sähkö (ladattava hybridi)", label:"PHEV bens.",  color:"#38bdf8", dash:[6,3]},
+  {code:"Diesel/Sähkö (ladattava hybridi)",   label:"PHEV diesel", color:"#818cf8", dash:[4,3]},
+  {code:"Bensiini",                           label:"Bensiini",    color:"#fb923c", dash:[2,4]},
+  {code:"Diesel",                             label:"Diesel",      color:"#fbbf24", dash:[2,4]},
+];
+const BC = [
+  "#e879f9","#facc15","#4ade80","#60a5fa","#f87171","#fb923c",
+  "#a78bfa","#34d399","#f472b6","#94a3b8","#c084fc","#86efac",
+  "#fda4af","#67e8f9","#d9f99d","#fcd34d","#a5f3fc","#bbf7d0",
+  "#fecaca","#c7d2fe"
+];
+
+// ─── MONTHS ───────────────────────────────────────────────────────────────────
+function buildMonths() {
+  const m=[]; let y=LATEST_YEAR,mo=LATEST_MONTH;
+  for(let i=0;i<N;i++){
+    m.unshift({year:y,month:mo,code:`${y}M${String(mo).padStart(2,"0")}`});
+    if(--mo===0){mo=12;y--;}
+  }
+  return m;
+}
+function youngYears(mon){
+  const r=[];
+  for(let y=mon.year-2;y<=LATEST_YEAR;y++) r.push(String(y));
+  return r;
+}
+function allYears(months){
+  const s=new Set();
+  months.forEach(m=>youngYears(m).forEach(y=>s.add(y)));
+  return [...s].sort();
+}
+
+// ─── API ─────────────────────────────────────────────────────────────────────
+async function px(q){
+  const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({query:q,response:{format:"json"}})});
+  if(!r.ok) throw new Error(`Traficom ${r.status}`);
+  return r.json();
+}
+
+// ─── MAIN LOAD ────────────────────────────────────────────────────────────────
+async function load(){
+  setStatus("Haetaan dataa Traficomilta...");
+  try {
+    const months=buildMonths(), yrs=allYears(months);
+    const [bd,pd]=await Promise.all([
+      px([{code:"Merkki",selection:{filter:"item",values:BRANDS}},
+          {code:"Käyttöönottovuosi",selection:{filter:"item",values:yrs}},
+          {code:"Käyttövoima",selection:{filter:"item",values:["Yhteensä"]}},
+          {code:"Kuukausi",selection:{filter:"item",values:months.map(m=>m.code)}}]),
+      px([{code:"Merkki",selection:{filter:"item",values:["Henkilöautot yhteensä"]}},
+          {code:"Käyttöönottovuosi",selection:{filter:"item",values:yrs}},
+          {code:"Käyttövoima",selection:{filter:"item",values:PT.map(p=>p.code)}},
+          {code:"Kuukausi",selection:{filter:"item",values:months.map(m=>m.code)}}])
+    ]);
+
+    setStatus("Lasketaan...");
+    const nB=BRANDS.length, nY=yrs.length, nM=months.length, nP=PT.length;
+    const bv=bd.value, pv=pd.value;
+
+    // Apply per-month <3y filter
+    const mBrands=[], mPT=[], bTot=new Array(nB).fill(0);
+    months.forEach((mon,mi)=>{
+      const vy=youngYears(mon).filter(y=>yrs.includes(y));
+      const rb=BRANDS.map((_,bi)=>vy.reduce((s,y)=>s+(bv[bi*nY*nM+yrs.indexOf(y)*nM+mi]||0),0));
+      rb.forEach((v,bi)=>bTot[bi]+=v);
+      mBrands.push(rb);
+      mPT.push(PT.map((_,pi)=>vy.reduce((s,y)=>s+(pv[pi*nY*nM+yrs.indexOf(y)*nM+mi]||0),0)));
+    });
+
+    const labels=months.map(m=>`${m.month}/${String(m.year).slice(2)}`);
+    const totals=months.map((_,mi)=>mPT[mi].reduce((a,b)=>a+b,0));
+
+    updateKPIs(totals,mPT,months.length);
+    drawMerkit(labels,mBrands,bTot,nB);
+    drawPT(labels,mPT,totals);
+    drawTotal(labels,totals);
+    updateNote(months,yrs);
+
+    const f=months[0].code.replace("M","/"), l=months[months.length-1].code.replace("M","/");
+    document.getElementById("data-freshness").textContent=`Traficom · ${f}–${l}`;
+    document.getElementById("footer-range").textContent=`${f} – ${l}`;
+    setStatus("✓ Data haettu onnistuneesti","ok");
+  } catch(e){
+    setStatus("❌ "+e.message+". Tarkista verkkoyhteytesi.","err");
+    document.getElementById("data-freshness").textContent="Virhe ladattaessa";
+  }
+}
+
+// ─── KPIs ─────────────────────────────────────────────────────────────────────
+function updateKPIs(totals,mPT,nM){
+  const grand=totals.reduce((a,b)=>a+b,0);
+  document.getElementById("kpi-total").textContent=grand.toLocaleString("fi");
+  let ev=0,phev=0,tot=0;
+  for(let i=nM-6;i<nM;i++){
+    tot+=totals[i]; ev+=mPT[i][0]; phev+=mPT[i][1]+mPT[i][2];
+  }
+  const p=v=>tot>0?Math.round(v/tot*100)+"%":"—";
+  document.getElementById("kpi-ev").textContent=p(ev);
+  document.getElementById("kpi-phev").textContent=p(phev);
+  document.getElementById("kpi-plug").textContent=p(ev+phev);
+}
+
+// ─── CHARTS ───────────────────────────────────────────────────────────────────
+const GRID="#1a2a3d", TICK="#4e6278", DARK="#0d1828";
+const TT={backgroundColor:"#0a1825f5",borderColor:GRID,borderWidth:1,
+          titleColor:"#e4eaf4",bodyColor:"#8a9eb8",padding:10,cornerRadius:8};
+Chart.defaults.color=TICK; Chart.defaults.borderColor=GRID;
+Chart.defaults.font.family="-apple-system,'SF Pro Text',sans-serif";
+Chart.defaults.font.size=9;
+
+function xScale(){return{grid:{color:GRID},ticks:{color:TICK,font:{size:8},maxRotation:60}}}
+function yLeft(stack){return{type:"linear",position:"left",stacked:!!stack,grid:{color:GRID},ticks:{color:TICK,font:{size:8}}}}
+
+function drawMerkit(labels,mBrands,bTot,nB){
+  // Rank by total
+  const ranked=[...Array(nB).keys()].map(i=>({i,t:bTot[i]})).sort((a,b)=>b.t-a.t).slice(0,10);
+  const ds=ranked.map((r,ri)=>({
+    type:"bar",label:BRANDS[r.i],
+    data:labels.map((_,mi)=>mBrands[mi][r.i]),
+    backgroundColor:BC[ri]+"bb",borderColor:BC[ri],borderWidth:.5,stack:"b"
+  }));
+  new Chart(document.getElementById("c-merkit"),{
+    data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{
+        label:c=>` ${c.dataset.label}: ${c.parsed.y} kpl`,
+        footer:items=>` Yht: ${items.reduce((a,i)=>a+i.parsed.y,0)} kpl`
+      }}},
+      scales:{x:{...xScale(),stacked:true},y:yLeft(true)}}
+  });
+  // Legend
+  const leg=document.getElementById("leg-merkit");
+  ranked.forEach((r,ri)=>{
+    const d=document.createElement("div"); d.className="l-item";
+    d.innerHTML=`<div class="l-dot" style="background:${BC[ri]}"></div>${BRANDS[r.i]}`;
+    leg.appendChild(d);
+  });
+  // Horizontal bar totals
+  const rs=[...ranked].sort((a,b)=>b.t-a.t);
+  new Chart(document.getElementById("c-brands-bar"),{
+    type:"bar",
+    data:{labels:rs.map(r=>BRANDS[r.i]),
+          datasets:[{data:rs.map(r=>r.t),backgroundColor:rs.map((_,i)=>BC[i]+"bb"),
+                     borderColor:rs.map((_,i)=>BC[i]),borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.parsed.x.toLocaleString("fi")} kpl`}}},
+      scales:{x:{grid:{color:GRID},ticks:{color:TICK,font:{size:8}}},
+              y:{grid:{color:"transparent"},ticks:{color:TICK,font:{size:9}}}}}
+  });
+}
+
+function drawPT(labels,mPT,totals){
+  // % lines
+  new Chart(document.getElementById("c-pt-pct"),{
+    type:"line",
+    data:{labels,datasets:PT.map((p,pi)=>({
+      label:p.label,
+      data:labels.map((_,mi)=>totals[mi]>0?parseFloat((mPT[mi][pi]/totals[mi]*100).toFixed(1)):null),
+      borderColor:p.color,backgroundColor:p.color+"18",borderWidth:2.5,
+      borderDash:p.dash,pointRadius:2,tension:.35,fill:false
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.dataset.label}: ${c.parsed.y?.toFixed(1)}%`}}},
+      scales:{x:xScale(),y:{...yLeft(),min:0,max:100,ticks:{...yLeft().ticks,callback:v=>v+"%"}}}}
+  });
+  // Legend
+  const leg=document.getElementById("leg-pt");
+  PT.forEach(p=>{
+    const d=document.createElement("div"); d.className="l-item";
+    const s=p.dash.length?`border-top:2px dashed ${p.color}`:`border-top:2.5px solid ${p.color}`;
+    d.innerHTML=`<div class="l-line" style="${s}"></div>${p.label}`;
+    leg.appendChild(d);
+  });
+  // kpl stacked
+  new Chart(document.getElementById("c-pt-kpl"),{
+    type:"bar",
+    data:{labels,datasets:PT.map((p,pi)=>({
+      label:p.label,data:labels.map((_,mi)=>mPT[mi][pi]),
+      backgroundColor:p.color+"88",stack:"pt",borderWidth:0
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{...TT}},
+      scales:{x:{...xScale(),stacked:true},y:yLeft(true)}}
+  });
+}
+
+function drawTotal(labels,totals){
+  new Chart(document.getElementById("c-total"),{
+    type:"line",
+    data:{labels,datasets:[{
+      label:"Alle 3v kpl/kk",data:totals,
+      borderColor:"#00d4a8",backgroundColor:"rgba(0,212,168,.07)",
+      borderWidth:2.5,pointRadius:3,pointBackgroundColor:"#00d4a8",tension:.35,fill:true
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{...TT,callbacks:{label:c=>` ${c.parsed.y} kpl`}}},
+      scales:{x:xScale(),y:{...yLeft(),min:0}}}
+  });
+}
+
+function updateNote(months,yrs){
+  const f=months[0], l=months[months.length-1];
+  document.getElementById("note-dynamic").textContent=
+    `Alle-3v per kk: ${f.code.replace("M","/")} → vm ${f.year-2}–${f.year} · `+
+    `${l.code.replace("M","/")} → vm ${l.year-2}–${l.year}\n`+
+    `Kyselyssä käyttöönottovuodet: ${yrs.join(", ")}`;
+}
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function showTab(id,btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  document.getElementById("tab-"+id).classList.add("active");
+  btn.classList.add("active");
+}
+
+// ─── STATUS ───────────────────────────────────────────────────────────────────
+function setStatus(msg,cls=""){
+  const el=document.getElementById("status-msg");
+  el.innerHTML=(cls===""&&!msg.startsWith("✓")&&!msg.startsWith("❌"))
+    ? `<span class="spin"></span>${msg}` : msg;
+  el.style.color=cls==="ok"?"#00d4a8":cls==="err"?"#f87171":"#4e6278";
+}
+
+window.addEventListener("load",load);
+</script>
+</body>
+</html>
